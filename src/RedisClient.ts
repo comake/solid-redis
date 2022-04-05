@@ -2,6 +2,9 @@ import { createClient } from 'redis';
 import type { RedisClientType } from 'redis';
 import type { RedisConfiguration } from './RedisUtil';
 
+/**
+ * A wrapper for the Redis client.
+ */
 export class RedisClient {
   private readonly redisClient: RedisClientType;
 
@@ -22,7 +25,7 @@ export class RedisClient {
     return this.redisClient.set(key, value);
   }
 
-  public async getAllSetMembers(key: string): Promise<string[] | null> {
+  public async getAllSetMembers(key: string): Promise<string[]> {
     return this.redisClient.sMembers(key);
   }
 

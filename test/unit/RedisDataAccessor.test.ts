@@ -7,7 +7,7 @@ import { RepresentationMetadata, SingleRootIdentifierStrategy, NotFoundHttpError
 import arrayifyStream from 'arrayify-stream';
 import { DataFactory } from 'n3';
 import { RedisClient } from '../../src/RedisClient';
-import { RedisDataAccessor, DELIMETER } from '../../src/RedisDataAccessor';
+import { RedisDataAccessor, DELIMETER, EMPTY_SET_STRING } from '../../src/RedisDataAccessor';
 import * as RedisUtil from '../../src/RedisUtil';
 
 const { literal, namedNode, quad } = DataFactory;
@@ -31,7 +31,7 @@ describe('A RedisDataAccessor', (): void => {
   let getKey: any;
   let getResponse: string | null;
   let getAllSetMembers: any;
-  let sMembersResponse: string[] | null;
+  let sMembersResponse: string[];
   let setSetMembers: any;
   let addSetMember: any;
   let setKey: any;
@@ -100,6 +100,13 @@ describe('A RedisDataAccessor', (): void => {
         quad(namedNode('http://identifier'), namedNode('https://predicate'), literal('value')),
       ]);
     });
+
+    it('returns an empty array if the set only contained the dummy value.', async(): Promise<void> => {
+      getResponse = INTERNAL_QUADS;
+      sMembersResponse = [ EMPTY_SET_STRING ];
+      const result = await accessor.getData({ path: 'http://identifier' });
+      await expect(arrayifyStream(result)).resolves.toBeRdfIsomorphic([]);
+    });
   });
 
   describe('getting metadata', (): void => {
@@ -124,6 +131,15 @@ describe('A RedisDataAccessor', (): void => {
       expect(getAllSetMembers).toHaveBeenCalledWith(`http://identifier${DELIMETER}meta`);
     });
 
+    it('returns only the content type quad if the set only contained the dummy value.', async(): Promise<void> => {
+      sMembersResponse = [ EMPTY_SET_STRING ];
+      const fetchedMetadata = await accessor.getMetadata({ path: 'http://identifier' });
+      expect(fetchedMetadata.quads()).toBeRdfIsomorphic([
+        quad(namedNode('http://identifier'), CONTENT_TYPE_TERM, literal(INTERNAL_QUADS)),
+      ]);
+      expect(getAllSetMembers).toHaveBeenCalledWith(`http://identifier${DELIMETER}meta`);
+    });
+
     it('does not set the content-type for container metadata.', async(): Promise<void> => {
       sMembersResponse = [ `http://containerIdentifier/${DELIMETER}https://predicate${DELIMETER}"value"` ];
       const fetchedMetadata = await accessor.getMetadata({ path: 'http://containerIdentifier/' });
@@ -134,7 +150,7 @@ describe('A RedisDataAccessor', (): void => {
     });
 
     it('errors if no metadata was found.', async(): Promise<void> => {
-      sMembersResponse = null;
+      sMembersResponse = [];
       await expect(accessor.getMetadata({ path: 'http://identifier' })).rejects.toThrow(NotFoundHttpError);
       expect(getAllSetMembers).toHaveBeenCalledWith(`http://identifier${DELIMETER}meta`);
     });
@@ -145,18 +161,6 @@ describe('A RedisDataAccessor', (): void => {
       sMembersResponse = [ 'http://container/child' ];
       getAllSetMembers = jest.fn((): Promise<string[] | null> => Promise.resolve(sMembersResponse));
       (RedisClient as jest.Mock).mockReturnValue({ getAllSetMembers, connect });
-    });
-
-    it('errors if no children data was found.', async(): Promise<void> => {
-      sMembersResponse = null;
-      async function getChildren(): Promise<void> {
-        const children = [];
-        for await (const child of accessor.getChildren({ path: 'http://container/' })) {
-          children.push(child);
-        }
-      }
-      await expect(getChildren()).rejects.toThrow(NotFoundHttpError);
-      expect(getAllSetMembers).toHaveBeenCalledWith(`http://container/${DELIMETER}children`);
     });
 
     it('requests the container data to find its children.', async(): Promise<void> => {
@@ -213,6 +217,17 @@ describe('A RedisDataAccessor', (): void => {
       );
     });
 
+    it('writes a set with a dummy value if there are no quads to write.', async(): Promise<void> => {
+      metadata.contentType = INTERNAL_QUADS;
+      quadData = guardedStreamFrom([]);
+      await expect(accessor.writeDocument({ path: `${identifierBase}resource` }, quadData, metadata))
+        .resolves.toBeUndefined();
+      expect(setSetMembers).toHaveBeenCalledWith(
+        `${identifierBase}resource`,
+        [ EMPTY_SET_STRING ],
+      );
+    });
+
     it('errors when writing triples in a non-default graph.', async(): Promise<void> => {
       metadata.contentType = INTERNAL_QUADS;
       quadData = guardedStreamFrom(
@@ -248,6 +263,15 @@ describe('A RedisDataAccessor', (): void => {
       expect(setSetMembers).toHaveBeenCalledWith(
         `${identifierBase}resource/${DELIMETER}meta`,
         [ `${identifierBase}resource/${DELIMETER}http://is.a${DELIMETER}"value"` ],
+      );
+    });
+
+    it('writes a set with a dummy value if there is no metadata.', async(): Promise<void> => {
+      await expect(accessor.writeContainer({ path: `${identifierBase}resource/` }, metadata))
+        .resolves.toBeUndefined();
+      expect(setSetMembers).toHaveBeenCalledWith(
+        `${identifierBase}resource/${DELIMETER}meta`,
+        [ EMPTY_SET_STRING ],
       );
     });
 

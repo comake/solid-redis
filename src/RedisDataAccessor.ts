@@ -32,6 +32,7 @@ export const defaultConfiguration = {
 };
 
 export const DELIMETER = '|';
+export const EMPTY_SET_STRING = '1';
 
 /**
  * Stores all data and metadata of resources in a Redis Database.
@@ -67,9 +68,9 @@ export class RedisDataAccessor implements DataAccessor {
     const contentTypeKey = this.contentTypeKey(identifier.path);
     const contentType = await this.redisClient!.getKey(contentTypeKey);
     if (contentType === INTERNAL_QUADS) {
-      const quadsAsStrings = await this.redisClient!.getAllSetMembers(identifier.path);
-      if (quadsAsStrings) {
-        const quads = quadsAsStrings.map((quadString: string): Quad => this.tripleStringToQuad(quadString));
+      const triplesAsStrings = await this.redisClient!.getAllSetMembers(identifier.path);
+      if (triplesAsStrings.length > 0) {
+        const quads = this.tripleStringsToQuads(triplesAsStrings);
         return guardedStreamFrom(quads);
       }
     } else {
@@ -90,12 +91,12 @@ export class RedisDataAccessor implements DataAccessor {
     await this.ensureClientIsInitialized();
 
     const metadataKey = this.metadataKey(identifier.path);
-    const metadataStrings = await this.redisClient!.getAllSetMembers(metadataKey);
-    if (!metadataStrings) {
+    const metadataTriplesAsStrings = await this.redisClient!.getAllSetMembers(metadataKey);
+    if (metadataTriplesAsStrings.length === 0) {
       throw new NotFoundHttpError();
     }
 
-    const quads = metadataStrings.map((quadString: string): Quad => this.tripleStringToQuad(quadString));
+    const quads = this.tripleStringsToQuads(metadataTriplesAsStrings);
     const metadata = new RepresentationMetadata(identifier).addQuads(quads);
     if (!isContainerIdentifier(identifier)) {
       const contentTypeKey = this.contentTypeKey(identifier.path);
@@ -122,13 +123,8 @@ export class RedisDataAccessor implements DataAccessor {
    */
   public async* getChildren(identifier: ResourceIdentifier): AsyncIterableIterator<RepresentationMetadata> {
     await this.ensureClientIsInitialized();
-
     const childrenKey = this.childrenKey(identifier.path);
     const children = await this.redisClient!.getAllSetMembers(childrenKey);
-    if (!children) {
-      throw new NotFoundHttpError();
-    }
-
     for (const child of children) {
       yield new RepresentationMetadata(namedNode(child));
     }
@@ -145,43 +141,10 @@ export class RedisDataAccessor implements DataAccessor {
   Promise<void> {
     await this.ensureClientIsInitialized();
     const { name, parent } = this.getRelatedNames(identifier);
-
-    // Set metadata
-    const metadataKey = this.metadataKey(name);
-    await this.redisClient!.setSetMembers(
-      metadataKey,
-      metadata.quads().map((metadataQuad): string => this.quadToTripleString(metadataQuad)),
-    );
-
-    // Set parent
-    if (parent) {
-      const parentChildrenKey = this.childrenKey(parent);
-      await this.redisClient!.addSetMember(parentChildrenKey, name);
-    }
-
-    // Set contentType
-    if (metadata.contentType) {
-      const contentTypeKey = this.contentTypeKey(name);
-      await this.redisClient!.setKey(contentTypeKey, metadata.contentType);
-    }
-
-    // Set data
-    if (metadata.contentType === INTERNAL_QUADS) {
-      const quads = await arrayifyStream(data);
-      const def = defaultGraph();
-
-      if (quads.some((dataQuad): boolean => !def.equals(dataQuad.graph))) {
-        throw new NotImplementedHttpError('Only triples in the default graph are supported.');
-      }
-
-      await this.redisClient!.setSetMembers(
-        name,
-        quads.map((dataQuad): string => this.quadToTripleString(dataQuad)),
-      );
-    } else {
-      const dataAsString = await readableToString(data);
-      await this.redisClient!.setKey(name, dataAsString);
-    }
+    await this.setMetadataFor(name, metadata);
+    await this.setParent(name, parent);
+    await this.setContentTypeFor(name, metadata.contentType);
+    await this.setDataFor(name, metadata.contentType, data);
   }
 
   /**
@@ -194,19 +157,8 @@ export class RedisDataAccessor implements DataAccessor {
   public async writeContainer(identifier: ResourceIdentifier, metadata: RepresentationMetadata): Promise<void> {
     await this.ensureClientIsInitialized();
     const { name, parent } = this.getRelatedNames(identifier);
-
-    // Set metadata
-    const metadataKey = this.metadataKey(name);
-    await this.redisClient!.setSetMembers(
-      metadataKey,
-      metadata.quads().map((metadataQuad): string => this.quadToTripleString(metadataQuad)),
-    );
-
-    // Set parent
-    if (parent) {
-      const parentChildrenKey = this.childrenKey(parent);
-      await this.redisClient!.addSetMember(parentChildrenKey, name);
-    }
+    await this.setMetadataFor(name, metadata);
+    await this.setParent(name, parent);
   }
 
   /**
@@ -249,24 +201,68 @@ export class RedisDataAccessor implements DataAccessor {
 
   private async initializeClient(): Promise<void> {
     this.initializingClient = true;
-    this.logger.info(`Initializing Dgraph Client`);
     this.redisClient = new RedisClient(this.configuration);
     await this.redisClient.connect();
     this.clientInitialized = true;
     this.initializingClient = false;
-    this.logger.info(`Initialized Dgraph Client`);
   }
 
-  private metadataKey(subject: string): string {
-    return [ subject, 'meta' ].join(DELIMETER);
+  private async setMetadataFor(name: string, metadata: RepresentationMetadata): Promise<void> {
+    const metadataKey = this.metadataKey(name);
+    const metadataQuads = metadata.quads();
+    const metadataAsStrings = this.quadsToTripleStrings(metadataQuads);
+    await this.redisClient!.setSetMembers(metadataKey, metadataAsStrings);
   }
 
-  private childrenKey(parent: string): string {
-    return [ parent, 'children' ].join(DELIMETER);
+  private async setParent(name: string, parent: string | undefined): Promise<void> {
+    if (parent) {
+      const parentChildrenKey = this.childrenKey(parent);
+      await this.redisClient!.addSetMember(parentChildrenKey, name);
+    }
   }
 
-  private contentTypeKey(parent: string): string {
-    return [ parent, 'contentType' ].join(DELIMETER);
+  private async setContentTypeFor(name: string, contentType: string | undefined): Promise<void> {
+    if (contentType) {
+      const contentTypeKey = this.contentTypeKey(name);
+      await this.redisClient!.setKey(contentTypeKey, contentType);
+    }
+  }
+
+  private async setDataFor(name: string, contentType: string | undefined, data: Guarded<Readable>): Promise<void> {
+    if (contentType === INTERNAL_QUADS) {
+      await this.setQuadDataFor(name, data);
+    } else {
+      await this.setNonQuadDataFor(name, data);
+    }
+  }
+
+  private async setQuadDataFor(name: string, data: Guarded<Readable>): Promise<void> {
+    const quads = await arrayifyStream(data);
+    const def = defaultGraph();
+
+    if (quads.some((dataQuad): boolean => !def.equals(dataQuad.graph))) {
+      throw new NotImplementedHttpError('Only triples in the default graph are supported.');
+    }
+
+    const quadsAsStrings = this.quadsToTripleStrings(quads);
+    await this.redisClient!.setSetMembers(name, quadsAsStrings);
+  }
+
+  private async setNonQuadDataFor(name: string, data: Guarded<Readable>): Promise<void> {
+    const dataAsString = await readableToString(data);
+    await this.redisClient!.setKey(name, dataAsString);
+  }
+
+  private metadataKey(name: string): string {
+    return [ name, 'meta' ].join(DELIMETER);
+  }
+
+  private childrenKey(name: string): string {
+    return [ name, 'children' ].join(DELIMETER);
+  }
+
+  private contentTypeKey(name: string): string {
+    return [ name, 'contentType' ].join(DELIMETER);
   }
 
   /**
@@ -284,6 +280,27 @@ export class RedisDataAccessor implements DataAccessor {
     const parentIdentifier = this.identifierStrategy.getParentContainer(identifier);
     const parent = parentIdentifier.path;
     return { name, parent };
+  }
+
+  /**
+  * Helper function to turn a redis set back into quads.
+  * Note: Redis cannot store empty sets, so have to remove the dummy string we put in there.
+  */
+  private tripleStringsToQuads(tripleStrings: string[]): Quad[] {
+    return tripleStrings
+      .filter((tripleString): boolean => tripleString !== EMPTY_SET_STRING)
+      .map((tripleString: string): Quad => this.tripleStringToQuad(tripleString));
+  }
+
+  /**
+  * Helper function to turn an array of Quads into a valid redis set of strings.
+  * Note: Redis cannot store empty sets, so we make a set with just a "1".
+  */
+  private quadsToTripleStrings(quads: Quad[]): string[] {
+    if (quads.length > 0) {
+      return quads.map((quadToTransform): string => this.quadToTripleString(quadToTransform));
+    }
+    return [ EMPTY_SET_STRING ];
   }
 
   /**

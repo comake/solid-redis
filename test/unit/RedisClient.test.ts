@@ -74,7 +74,7 @@ describe('A Redis Client', (): void => {
   it('gets set members.', async(): Promise<void> => {
     const result = await client.getAllSetMembers('key');
     expect(result).toBeInstanceOf(Array);
-    expect((result ?? [])[0]).toBe('value');
+    expect(result[0]).toBe('value');
     expect(sMembers).toHaveBeenCalledWith('key');
   });
 
