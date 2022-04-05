@@ -19,6 +19,9 @@ cd my-server
 npm install @solid/community-server@v3.0.0 @comake/solid-redis
 ```
 
+### Install Redis
+Follow [Getting started with Redis](https://redis.io/docs/getting-started/) to install and run Redis.
+
 ### Configure
 
 This extension can be used in 3 ways:
@@ -64,7 +67,7 @@ If you do not include this section, `host` defaults to `localhost` and `port` de
 
 You may optionally also include a `username` and `password` if your database requires them and a `dbNumber` if you don't use the default 0 database.
 
-### Run
+### Run CSS
 Execute the following command:
 ```shell
 npx community-solid-server -c config.json -m .
