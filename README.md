@@ -2,6 +2,13 @@
 
 Store data in your Solid Pod with a [Redis Database](https://redis.io/).
 
+#### Implementation details
+When used as a backend, Solid Redis requires all data to be translated into the `internal/quads` content type. Solid Redis then transforms quads into strings by concatenating their subject, predicate, and object values with the | (pipe) character. These strings are stored in [Redis Sets](https://redis.io/docs/manual/data-types/#sets). These Sets serve as the storage of the triples in LDP resources and their keys are the URIs of each resource. Solid Redis uses some special keys to store the metadata, children, and content type of resources.
+
+Because Redis [does not support empty Sets](https://github.com/redis/redis/issues/6048), for resources or metadata which should exist but contain no triples, Solid Redis stores a Set with a single dummy value of "1". These dummy values do not get exposed outside of the `RedisDataAccessor` class.
+
+When used as a key-value store, Solid Redis can store any arbitrary binary data up to 512Mb.
+
 ## How to use Solid Redis
 
 ### Install
@@ -12,12 +19,39 @@ cd my-server
 npm install @solid/community-server@v3.0.0 @comake/solid-redis
 ```
 
-### Configure as a DataAccessor
-In your `my-server` folder (or whatever the name of your project is):
+### Configure
 
-Create a `config.json` file from [this template](https://github.com/comake/solid-redis/blob/main/config-example.json), and fill out your settings. The only important change to make to the [default config from Community Solid Server](https://github.com/CommunitySolidServer/CommunitySolidServer/blob/main/config/default.json) is to change the line which uses `files-scs:config/storage/backend/*.json` to  `files-csd:config/redis-data-accessor.json`.
+This extension can be used in 3 ways:
+1. As your CSS's backend to store pod data.
+2. As your CSS's key-value storage to store internal data (accounts, locks, tokens, etc.).
+3. As both!
 
-Optionally, you can change the connection settings for your Redis database by adding parameters to the `RedisDataAccessor` in the `@graph` section such as:
+#### 1. As a backend
+In your server's root folder (`my-server` or whatever the name of your project is) create a `config.json` file from [this template (config-backend-example.json)](https://github.com/comake/solid-redis/blob/main/config-backend-example.json), and fill out your settings. The only important changes to make to the [default config](https://github.com/CommunitySolidServer/CommunitySolidServer/blob/main/config/default.json) are to add `solid-redis` into `@context` and to change the backend storage to redis:
+```diff
+-"files-scs:config/storage/backend/*.json",
++"files-csr:config/storage/backend/redis.json",
+```
+
+#### 2. As a key-value store
+In your server's root folder create a `config.json` file from [this template (config-key-value-store-example.json)](https://github.com/comake/solid-redis/blob/main/config-key-value-store-example.json), and fill out your settings. The only important changes to make to the [default config](https://github.com/CommunitySolidServer/CommunitySolidServer/blob/main/config/default.json) are to to add `solid-redis` into `@context` and change the key-value storage to redis:
+```diff
+-"files-scs:config/storage/key-value/*.json",
++"files-scs:config/storage/key-value/resource-store.json",
+```
+
+
+#### 3. As both
+In your server's root folder create a `config.json` file from [this template (config-all-storage-example.json)](https://github.com/comake/solid-redis/blob/main/config-all-storage-example.json), and fill out your settings. The only important changes to make to the [default config](https://github.com/CommunitySolidServer/CommunitySolidServer/blob/main/config/default.json) are to add `solid-redis` into `@context` and change the backend and key-value storage to the global redis storage:
+
+```diff
+-"files-scs:config/storage/backend/*.json",
+-"files-scs:config/storage/key-value/*.json"
++"files-csr:config/storage/redis.json"
+```
+
+### Configure the redis connection
+Optionally, you can change the connection settings for your Redis database by adding parameters to the `RedisDataAccessor` in the `@graph` section of the `config.json` file you just created such as:
 ```json
 {
   "@id": "urn:solid-redis:default:RedisDataAccessor",
@@ -26,12 +60,9 @@ Optionally, you can change the connection settings for your Redis database by ad
   "RedisDataAccessor:_configuration_port": "1234",
 }
 ```
-You may optionally also include a `username` and `password` if your database requires them and/or a `dbNumber` if you don't use the default 0 database. If you do not include this section, `host` defaults to `localhost` and `port` defaults to `6379`, which are the Redis defaults.
+If you do not include this section, `host` defaults to `localhost` and `port` defaults to `6379`, which are the Redis defaults.
 
-
-### Configure as internal storage
-You can also use this extension to store the internal data CSS stores instead of the LDP pod data.
-TODO
+You may optionally also include a `username` and `password` if your database requires them and a `dbNumber` if you don't use the default 0 database.
 
 ### Run
 Execute the following command:
@@ -58,6 +89,9 @@ npm ci
 
 ## TODO
 - [ ] Integration tests
+- [ ] Add support for different Redis modules such as:
+  - [RedisJSON](https://github.com/RedisJSON/RedisJSON) so the json data can be updated & queried as JSON instead of strings
+  - [RediSearch](https://github.com/RediSearch/RediSearch) to do full text search over the data in redis
 
 ## License
 

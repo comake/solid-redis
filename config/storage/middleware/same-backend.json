@@ -1,0 +1,15 @@
+{
+  "@context": [
+    "https://linkedsoftwaredependencies.org/bundles/npm/@comake/solid-redis/^1.0.0/components/context.jsonld",
+    "https://linkedsoftwaredependencies.org/bundles/npm/@solid/community-server/^3.0.0/components/context.jsonld",
+  ],
+  "import": [
+    "files-csr:config/storage/middleware/base.json",
+  ],
+  "@graph": [
+    {
+      "@id": "urn:solid-redis:default:RedisResourceStore_Converting",
+      "RepresentationConvertingStore:_source": { "@id": "urn:solid-server:default:ResourceStore_Backend" }
+    }
+  ]
+}

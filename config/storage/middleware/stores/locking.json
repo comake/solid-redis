@@ -1,0 +1,15 @@
+{
+  "@context": [
+    "https://linkedsoftwaredependencies.org/bundles/npm/@comake/solid-redis/^1.0.0/components/context.jsonld",
+    "https://linkedsoftwaredependencies.org/bundles/npm/@solid/community-server/^3.0.0/components/context.jsonld",
+  ],
+  "@graph": [
+    {
+      "comment": "Locks resources when they are accessed until the operation is finished.",
+      "@id": "urn:solid-redis:default:RedisResourceStore_Locking",
+      "@type": "LockingResourceStore",
+      "locks": { "@id": "urn:solid-server:default:ResourceLocker" },
+      "auxiliaryStrategy": { "@id": "urn:solid-server:default:AuxiliaryStrategy" },
+    },
+  ]
+}

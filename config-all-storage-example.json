@@ -1,6 +1,6 @@
 {
   "@context": [
-    "https://linkedsoftwaredependencies.org/bundles/npm/@comake/solid-redis/^2.0.0/components/context.jsonld",
+    "https://linkedsoftwaredependencies.org/bundles/npm/@comake/solid-redis/^1.0.0/components/context.jsonld",
     "https://linkedsoftwaredependencies.org/bundles/npm/@solid/community-server/^3.0.0/components/context.jsonld",
   ],
   "import": [
@@ -24,8 +24,7 @@
     "files-scs:config/ldp/metadata-parser/default.json",
     "files-scs:config/ldp/metadata-writer/default.json",
     "files-scs:config/ldp/modes/default.json",
-    "files-csd:config/redis-data-accessor.json",
-    "files-scs:config/storage/key-value/memory.json",
+    "files-csr:config/storage/redis.json",
     "files-scs:config/storage/middleware/default.json",
     "files-scs:config/util/auxiliary/acl.json",
     "files-scs:config/util/identifiers/suffix.json",
@@ -35,12 +34,5 @@
     "files-scs:config/util/resource-locker/memory.json",
     "files-scs:config/util/variables/default.json"
   ],
-  "@graph": [
-    {
-      "@id": "urn:solid-redis:default:RedisDataAccessor",
-      "comment": "The configuration to connect to the Redis instance.",
-      "RedisDataAccessor:_configuration_host": "localhost",
-      "RedisDataAccessor:_configuration_port": "6379",
-    }
-  ]
+  "@graph": []
 }

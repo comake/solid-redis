@@ -1,0 +1,47 @@
+{
+  "@context": [
+    "https://linkedsoftwaredependencies.org/bundles/npm/@comake/solid-redis/^1.0.0/components/context.jsonld",
+    "https://linkedsoftwaredependencies.org/bundles/npm/@solid/community-server/^3.0.0/components/context.jsonld",
+  ],
+  "@graph": [
+    {
+      "comment": "Allows for PATCH operations on stores that don't have native support.",
+      "@id": "urn:solid-redis:default:RedisResourceStore_Patching",
+      "@type": "PatchingStore",
+      "patchHandler": {
+        "@id": "urn:solid-server:default:PatchHandler",
+        "@type": "RepresentationPatchHandler",
+        "patcher": {
+          "@type": "WaterfallHandler",
+          "handlers": [
+            {
+              "comment": "Makes sure PATCH operations on containers target the metadata.",
+              "@type": "ContainerPatcher",
+              "patcher": { "@id": "urn:solid-server:default:PatchHandler_RDF" }
+            },
+            {
+              "@type": "ConvertingPatcher",
+              "patcher": { "@id": "urn:solid-server:default:PatchHandler_RDF" },
+              "converter": { "@id": "urn:solid-server:default:RepresentationConverter" },
+              "intermediateType": "internal/quads",
+              "defaultType": "text/turtle"
+            },
+            {
+              "@type": "StaticThrowHandler",
+              "error": { "@type": "UnsupportedMediaTypeHttpError" }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "comment": "Dedicated handlers that apply specific types of patch documents",
+      "@id": "urn:solid-server:default:PatchHandler_RDF",
+      "@type": "WaterfallHandler",
+      "handlers": [
+        { "@type": "N3Patcher" },
+        { "@type": "SparqlUpdatePatcher" }
+      ]
+    }
+  ]
+}
