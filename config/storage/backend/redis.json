@@ -1,6 +1,6 @@
 {
   "@context": [
-    "https://linkedsoftwaredependencies.org/bundles/npm/@comake/solid-redis/^1.0.0/components/context.jsonld",
+    "https://linkedsoftwaredependencies.org/bundles/npm/@comake/solid-redis/^1.1.0/components/context.jsonld",
     "https://linkedsoftwaredependencies.org/bundles/npm/@solid/community-server/^3.0.0/components/context.jsonld",
   ],
   "@graph": [
@@ -17,12 +17,6 @@
       "DataAccessorBasedStore:_identifierStrategy": { "@id": "urn:solid-server:default:IdentifierStrategy" },
       "DataAccessorBasedStore:_auxiliaryStrategy": { "@id": "urn:solid-server:default:AuxiliaryStrategy" },
       "DataAccessorBasedStore:_accessor": { "@id": "urn:solid-redis:default:RedisDataAccessor" }
-    },
-    {
-      "comment": "This makes it so all incoming data is converted to quad objects.",
-      "@id": "urn:solid-server:default:ResourceStore_Converting",
-      "RepresentationConvertingStore:_options_inConverter": { "@id": "urn:solid-server:default:RepresentationConverter" },
-      "RepresentationConvertingStore:_options_inType": "internal/quads"
     }
   ]
 }

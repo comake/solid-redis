@@ -3,11 +3,11 @@
 Store data in your Solid Pod with a [Redis Database](https://redis.io/).
 
 #### Implementation details
-When used as a backend, Solid Redis requires all data to be translated into the `internal/quads` content type. Solid Redis then transforms quads into strings by concatenating their subject, predicate, and object values with the | (pipe) character. These strings are stored in [Redis Sets](https://redis.io/docs/manual/data-types/#sets). These Sets serve as the storage of the triples in LDP resources and their keys are the URIs of each resource. Solid Redis uses some special keys to store the metadata, children, and content type of resources.
+For data with content type `internal/quads`, Solid Redis transforms quads into strings by concatenating their subject, predicate, and object values with the | (pipe) character. These strings are stored in [Redis Sets](https://redis.io/docs/manual/data-types/#sets). These Sets serve as the storage of the triples in LDP resources and their keys are the URIs of each resource. Solid Redis uses some special keys to store the metadata, children, and content type of resources.
 
 Because Redis [does not support empty Sets](https://github.com/redis/redis/issues/6048), for resources or metadata which should exist but contain no triples, Solid Redis stores a Set with a single dummy value of "1". These dummy values do not get exposed outside of the `RedisDataAccessor` class.
 
-When used as a key-value store, Solid Redis can store any arbitrary binary data up to 512Mb.
+All other content types other than `internal/quads` are stored as strings. Redis can store any arbitrary binary data as a string up to 512Mb.
 
 ## How to use Solid Redis
 
@@ -37,10 +37,10 @@ In your server's root folder (`my-server` or whatever the name of your project i
 ```
 
 #### 2. As a key-value store
-In your server's root folder create a `config.json` file from [this template (config-key-value-store-example.json)](https://github.com/comake/solid-redis/blob/main/config-key-value-store-example.json), and fill out your settings. The only important changes to make to the [default config](https://github.com/CommunitySolidServer/CommunitySolidServer/blob/main/config/default.json) are to to add `solid-redis` into `@context` and change the key-value storage to redis:
+In your server's root folder create a `config.json` file from [this template (config-key-value-store-example.json)](https://github.com/comake/solid-redis/blob/main/config-key-value-store-example.json), and fill out your settings. The only important changes to make to the [default config](https://github.com/CommunitySolidServer/CommunitySolidServer/blob/main/config/default.json) are to add `solid-redis` into `@context` and change the key-value storage to redis:
 ```diff
 -"files-scs:config/storage/key-value/*.json",
-+"files-scs:config/storage/key-value/resource-store.json",
++"files-csr:config/storage/key-value/redis.json",
 ```
 
 
@@ -50,7 +50,8 @@ In your server's root folder create a `config.json` file from [this template (co
 ```diff
 -"files-scs:config/storage/backend/*.json",
 -"files-scs:config/storage/key-value/*.json"
-+"files-csr:config/storage/redis.json"
++"files-csr:config/storage/backend/redis.json",
++"files-scs:config/storage/key-value/resource-store.json",
 ```
 
 ### Configure the redis connection

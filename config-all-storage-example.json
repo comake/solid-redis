@@ -1,6 +1,6 @@
 {
   "@context": [
-    "https://linkedsoftwaredependencies.org/bundles/npm/@comake/solid-redis/^1.0.0/components/context.jsonld",
+    "https://linkedsoftwaredependencies.org/bundles/npm/@comake/solid-redis/^1.1.0/components/context.jsonld",
     "https://linkedsoftwaredependencies.org/bundles/npm/@solid/community-server/^3.0.0/components/context.jsonld",
   ],
   "import": [
@@ -24,7 +24,8 @@
     "files-scs:config/ldp/metadata-parser/default.json",
     "files-scs:config/ldp/metadata-writer/default.json",
     "files-scs:config/ldp/modes/default.json",
-    "files-csr:config/storage/redis.json",
+    "files-csr:config/storage/backend/redis.json",
+    "files-scs:config/storage/key-value/resource-store.json",
     "files-scs:config/storage/middleware/default.json",
     "files-scs:config/util/auxiliary/acl.json",
     "files-scs:config/util/identifiers/suffix.json",

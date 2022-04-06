@@ -1,12 +1,34 @@
 {
   "@context": [
-    "https://linkedsoftwaredependencies.org/bundles/npm/@comake/solid-redis/^1.0.0/components/context.jsonld",
+    "https://linkedsoftwaredependencies.org/bundles/npm/@comake/solid-redis/^1.1.0/components/context.jsonld",
     "https://linkedsoftwaredependencies.org/bundles/npm/@solid/community-server/^3.0.0/components/context.jsonld",
   ],
   "import": [
-    "files-csr:config/storage/middleware/base.json",
+    "files-csr:config/storage/middleware/stores/converting.json",
+    "files-csr:config/storage/middleware/stores/locking.json",
+    "files-csr:config/storage/middleware/stores/patching.json"
   ],
   "@graph": [
+    {
+      "comment": "Sets up a stack of utility stores used by most instances.",
+      "@id": "urn:solid-redis:default:RedisResourceStore",
+      "@type": "MonitoringStore",
+      "MonitoringStore:_source": { "@id": "urn:solid-redis:default:RedisResourceStore_Index" }
+    },
+    {
+      "comment": "When a container with an index.html document is accessed, serve that HTML document instead of the container.",
+      "@id": "urn:solid-redis:default:RedisResourceStore_Index",
+      "@type": "IndexRepresentationStore",
+      "IndexRepresentationStore:_source": { "@id": "urn:solid-redis:default:RedisResourceStore_Locking" }
+    },
+    {
+      "@id": "urn:solid-redis:default:RedisResourceStore_Locking",
+      "LockingResourceStore:_source": { "@id": "urn:solid-redis:default:RedisResourceStore_Patching" }
+    },
+    {
+      "@id": "urn:solid-redis:default:RedisResourceStore_Patching",
+      "PatchingStore:_source": { "@id": "urn:solid-redis:default:RedisResourceStore_Converting" }
+    },
     {
       "@id": "urn:solid-redis:default:RedisResourceStore_Converting",
       "RepresentationConvertingStore:_source": { "@id": "urn:solid-redis:default:RedisResourceStore_Backend" }
