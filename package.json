@@ -54,12 +54,12 @@
     "redis": "^4.0.6"
   },
   "peerDependencies": {
-    "@solid/community-server": "^3.0.0"
+    "@solid/community-server": "^4.0.0"
   },
   "devDependencies": {
     "@commitlint/cli": "^16.2.1",
     "@commitlint/config-conventional": "^16.2.1",
-    "@solid/community-server": "^3.0.0",
+    "@solid/community-server": "^4.0.0",
     "@tsconfig/node14": "^1.0.0",
     "@types/jest": "^27.4.0",
     "@typescript-eslint/eslint-plugin": "^5.0.0",
