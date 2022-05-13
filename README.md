@@ -1,6 +1,8 @@
 # Redis database backend extension for the Community Solid Server
 
-Store data in your Solid Pod with a [Redis Database](https://redis.io/).
+Store data in your Solid Pod with a [Redis Database](https://redis.io/). Redis is an open source, in-memory data store.
+
+*Disclaimer: By default Redis saves snapshots of the dataset on disk, in a binary file called `dump.rdb`. This library does not alter these default persistence settings and does not include any extra calls to save the database to disk. [Read more about persistence in redis.](https://redis.io/docs/manual/persistence/)*
 
 #### Implementation details
 For data with content type `internal/quads`, Solid Redis transforms quads into strings by concatenating their subject, predicate, and object values with the | (pipe) character. These strings are stored in [Redis Sets](https://redis.io/docs/manual/data-types/#sets). These Sets serve as the storage of the triples in LDP resources and their keys are the URIs of each resource. Solid Redis uses some special keys to store the metadata, children, and content type of resources.
@@ -16,7 +18,7 @@ From the npm package registry:
 ```shell
 mkdir my-server
 cd my-server
-npm install @solid/community-server@v3.0.0 @comake/solid-redis
+npm install @solid/community-server@v4.0.0 @comake/solid-redis
 ```
 
 ### Install Redis
@@ -95,7 +97,7 @@ npm ci
 - [ ] Add support for different Redis modules such as:
   - [RedisJSON](https://github.com/RedisJSON/RedisJSON) so the json data can be updated & queried as JSON instead of strings
   - [RediSearch](https://github.com/RediSearch/RediSearch) to do full text search over the data in redis
-- [ ] Set up CI workflow
+- [ ] Remove the Redis client mock in integration tests and have them run on CI in docker with a read redis instance
 
 ## License
 
