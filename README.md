@@ -97,7 +97,7 @@ npm ci
 - [ ] Add support for different Redis modules such as:
   - [RedisJSON](https://github.com/RedisJSON/RedisJSON) so the json data can be updated & queried as JSON instead of strings
   - [RediSearch](https://github.com/RediSearch/RediSearch) to do full text search over the data in redis
-- [ ] Remove the Redis client mock in integration tests and have them run on CI in docker with a read redis instance
+- [ ] Remove the Redis client mock in integration tests and have them run on CI in docker with a real redis instance
 
 ## License
 
