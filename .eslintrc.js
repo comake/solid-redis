@@ -7,6 +7,9 @@ module.exports = {
   },
   // Ignoring js files (such as this one) since they seem to conflict with rules that require typing info
   ignorePatterns: [ '*.js' ],
+  globals: {
+    RequestInit: 'readonly',
+  },
   plugins: [
     'tsdoc',
     'import',
@@ -19,6 +22,15 @@ module.exports = {
     'plugin:import/warnings',
     'plugin:import/typescript',
   ],
+  settings: {
+    'import/resolver': {
+      typescript: {
+        // Always try to resolve types under `<root>@types` directory
+        // even it doesn't contain any source code, like `@types/rdf-js`
+        alwaysTryTypes: true,
+      },
+    },
+  },
   rules: {
     // Below taken from https://github.com/comake/community-server/blob/main/.eslintrc.js
     // There are valid typing reasons to have one or the other
@@ -87,7 +99,7 @@ module.exports = {
       {
         selector: 'default',
         format: [ 'camelCase' ],
-        leadingUnderscore: 'allow',
+        leadingUnderscore: 'forbid',
         trailingUnderscore: 'forbid',
       },
       {

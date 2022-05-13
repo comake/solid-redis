@@ -1,0 +1,6 @@
+PREFIX : <https://adlerfalkner.com/profile/#>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+
+:me a foaf:Person;
+    foaf:name  "Adler Faulkner"@en;
+    foaf:homepage <https://adlerfalkner.com/>.

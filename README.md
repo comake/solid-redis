@@ -92,10 +92,10 @@ npm ci
 ```
 
 ## TODO
-- [ ] Integration tests
 - [ ] Add support for different Redis modules such as:
   - [RedisJSON](https://github.com/RedisJSON/RedisJSON) so the json data can be updated & queried as JSON instead of strings
   - [RediSearch](https://github.com/RediSearch/RediSearch) to do full text search over the data in redis
+- [ ] Set up CI workflow
 
 ## License
 

@@ -25,7 +25,7 @@ describe('A Redis Client', (): void => {
     get = jest.fn((): Promise<string | null> => Promise.resolve('value'));
     set = jest.fn((): Promise<number> => Promise.resolve(1));
     sMembers = jest.fn((): Promise<string[] | null> => Promise.resolve([ 'value' ]));
-    sAdd = jest.fn((_, members: string | string[]): Promise<number> => {
+    sAdd = jest.fn((key: string, members: string | string[]): Promise<number> => {
       const addedMembers = Array.isArray(members) ? members.length : 1;
       return Promise.resolve(addedMembers);
     });
