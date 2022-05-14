@@ -1,0 +1,28 @@
+{
+  "@context": [
+    "https://linkedsoftwaredependencies.org/bundles/npm/@comake/solid-redis/^2.0.0/components/context.jsonld",
+    "https://linkedsoftwaredependencies.org/bundles/npm/@solid/community-server/^4.0.0/components/context.jsonld"
+  ],
+  "@graph": [
+    {
+      "comment": "Sets up a stack of utility stores used by most instances.",
+      "@id": "urn:solid-redis:default:RedisResourceStore",
+      "@type": "MonitoringStore",
+      "MonitoringStore:_source": { "@id": "urn:solid-redis:default:RedisResourceStore_Index" }
+    },
+    {
+      "comment": "When a container with an index.html document is accessed, serve that HTML document instead of the container.",
+      "@id": "urn:solid-redis:default:RedisResourceStore_Index",
+      "@type": "IndexRepresentationStore",
+      "IndexRepresentationStore:_source": { "@id": "urn:solid-redis:default:RedisResourceStore_Locking" }
+    },
+    {
+      "comment": "Locks resources when they are accessed until the operation is finished.",
+      "@id": "urn:solid-redis:default:RedisResourceStore_Locking",
+      "@type": "LockingResourceStore",
+      "LockingResourceStore:_locks": { "@id": "urn:solid-server:default:ResourceLocker" },
+      "LockingResourceStore:_auxiliaryStrategy": { "@id": "urn:solid-server:default:AuxiliaryStrategy" },
+      "LockingResourceStore:_source": { "@id": "urn:solid-redis:default:RedisResourceStore_Backend" }
+    }
+  ]
+}

@@ -4,7 +4,8 @@
     "https://linkedsoftwaredependencies.org/bundles/npm/@solid/community-server/^4.0.0/components/context.jsonld"
   ],
   "import": [
-    "files-scs:config/storage/key-value/storages/storages.json"
+    "files-scs:config/storage/key-value/storages/storages.json",
+    "files-csr:config/storage/middleware/separate-backend.json"
   ],
   "@graph": [
     {
@@ -18,7 +19,7 @@
     },
     {
       "comment": "A default store setup with a Redis database backend.",
-      "@id": "urn:solid-redis:default:RedisKeyValueResourceStore",
+      "@id": "urn:solid-redis:default:RedisResourceStore_Backend",
       "@type": "DataAccessorBasedStore",
       "DataAccessorBasedStore:_identifierStrategy": { "@id": "urn:solid-server:default:IdentifierStrategy" },
       "DataAccessorBasedStore:_auxiliaryStrategy": { "@id": "urn:solid-server:default:AuxiliaryStrategy" },
@@ -28,7 +29,7 @@
       "comment": "A storage that writes directly to a low-level store. This is necessary to prevent infinite loops with stores that also use storage.",
       "@id": "urn:solid-server:default:BackendKeyValueStorage",
       "@type": "JsonResourceStorage",
-      "JsonResourceStorage:_source": { "@id": "urn:solid-redis:default:RedisKeyValueResourceStore" },
+      "JsonResourceStorage:_source": { "@id": "urn:solid-redis:default:RedisResourceStore_Backend" },
       "JsonResourceStorage:_baseUrl": { "@id": "urn:solid-server:default:variable:baseUrl" },
       "JsonResourceStorage:_container": "/.internal/"
     },
@@ -36,7 +37,7 @@
       "comment": "Internal value storage.",
       "@id": "urn:solid-server:default:KeyValueStorage",
       "@type": "JsonResourceStorage",
-      "JsonResourceStorage:_source": { "@id": "urn:solid-redis:default:RedisKeyValueResourceStore" },
+      "JsonResourceStorage:_source": { "@id": "urn:solid-redis:default:RedisResourceStore" },
       "JsonResourceStorage:_baseUrl": { "@id": "urn:solid-server:default:variable:baseUrl" },
       "JsonResourceStorage:_container": "/.internal/"
     },
